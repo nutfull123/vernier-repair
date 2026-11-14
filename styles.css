@@ -83,6 +83,10 @@ textarea.in { min-height: 104px; resize: vertical }
   font-family: var(--mono); font-weight: 600; font-size: 22px }
 
 /* home */
+.greet { display: flex; align-items: center; justify-content: space-between; gap: 12px }
+.greet img { width: 112px; height: auto; flex-shrink: 0 }
+.login .greet img { width: clamp(80px, 30%, 180px) }
+.login .greet .stack { gap: 16px }
 .hello { font-size: 21px; font-weight: 700 }
 .tiles { display: grid; gap: 12px }
 .tile { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 14px; border: 1.5px solid var(--line); background: var(--surface);
