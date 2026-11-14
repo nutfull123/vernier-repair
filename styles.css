@@ -78,8 +78,6 @@ textarea.in { min-height: 104px; resize: vertical }
 .login { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px; padding-block: 32px;
   padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)) }
 .login p { margin: 0 }
-/* logo file has a white background, so it sits on a white plate in dark mode too */
-.login-logo { width: min(260px, 100%); height: auto; background: #fff; border-radius: 16px; padding: 8px 12px }
 .login-title { margin: 0; font-size: 27px; line-height: 1.3 }
 .mark { width: 56px; height: 56px; border-radius: 16px; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center;
   font-family: var(--mono); font-weight: 600; font-size: 22px }
@@ -174,7 +172,6 @@ dl.kv dt { color: var(--muted) } dl.kv dd { margin: 0; min-width: 0; overflow-wr
 .log { background: var(--sunk); border-radius: 12px; padding: 10px 12px; font-size: 15px; display: flex; flex-direction: column; gap: 6px; white-space: pre-wrap; overflow-wrap: anywhere }
 .log b { font-size: 14px; color: var(--muted); font-weight: 600; white-space: normal }
 .empty { text-align: center; padding: 32px 8px; color: var(--muted) }
-.empty img { display: block; width: 160px; height: auto; margin: 0 auto 8px }
 .skeleton { height: 76px; border-radius: 16px; background: linear-gradient(90deg, var(--surface), var(--sunk), var(--surface)); background-size: 200% 100%; animation: shimmer 1.2s infinite }
 @keyframes shimmer { to { background-position: -200% 0 } }
 .filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px }
