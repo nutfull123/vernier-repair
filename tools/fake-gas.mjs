@@ -48,6 +48,10 @@ export function loadBackend(dir) {
     },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
     MailApp: { sendEmail: m => mails.push(m) },
+    ScriptApp: { getOAuthToken: () => 'token' },
+    // Stands in for Drive's OCR: "uploading" makes a temp file, "exporting" returns the canned text.
+    UrlFetchApp: { fetch: url => { const up = url.includes('/upload/'); if (up) files.set('ocr-doc', { trashed: false });
+      return { getResponseCode: () => 200, getContentText: () => up ? '{"id":"ocr-doc"}' : 'Vernier\nS/N: 17026692\n' }; } },
     Session: { getEffectiveUser: () => ({ getEmail: () => 'owner@example.com' }) },
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: s => ({ body: s, setMimeType() { return this; } }) },
   };

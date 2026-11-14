@@ -34,6 +34,11 @@ assert.equal(c.ticket.finishedAt, undefined);
 assert.equal(b.mails.length, 2, 'email sent per new ticket');
 assert.match(b.mails[1].subject, /ด่วน/);
 
+// ocr returns the text and trashes its temp Doc
+assert.match(call('ocr', { data: 'eA==' }).text, /17026692/);
+assert.equal(b.files.get('ocr-doc').trashed, true, 'ocr temp doc trashed');
+assert.equal(call('ocr', {}).ok, false, 'ocr needs an image');
+
 // leading-zero S/N survives a round trip as text
 const t0 = call('list').tickets.find(t => t.id === c.ticket.id);
 assert.equal(t0.sn, '0F1009283');

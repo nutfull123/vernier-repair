@@ -377,9 +377,14 @@ async function readBarcode(file) {
   const hint = $('snHint');
   hint.innerHTML = '<span class="chip warn">กำลังอ่านบาร์โค้ด…</span>';
   let text = null;
-  try { text = await decodeBarcode(file); } catch { /* fall through to manual entry */ }
+  try { text = await decodeBarcode(file); } catch { /* fall through to reading the printed text */ }
   if (!text) {
-    hint.innerHTML = '<span class="chip warn">อ่านบาร์โค้ดไม่ได้</span> พิมพ์ S/N จากฉลากเอง หรือถ่ายใหม่ให้บาร์โค้ดชัดและเต็มกรอบ';
+    hint.innerHTML = '<span class="chip warn">กำลังอ่านข้อความบนฉลาก…</span>';
+    try { text = await ocrSerial(file); } catch { /* fall through to manual entry */ }
+  }
+  if (files.f2 !== file) return; // a newer photo was picked while this one was being read
+  if (!text) {
+    hint.innerHTML = '<span class="chip warn">อ่าน S/N ไม่ได้</span> พิมพ์ S/N จากฉลากเอง หรือถ่ายใหม่ให้ฉลากชัดและเต็มกรอบ';
     return;
   }
   // Fill only if the field is empty or still holds a previous auto-read, so we never overwrite what someone typed.
@@ -400,13 +405,37 @@ async function decodeBarcode(file) {
     return null;
   } finally { bmp.close?.(); }
 }
-function zxingDecode(bmp, max, rot) {
+// The photo scaled to fit `max` px and turned `rot` degrees, on a canvas.
+function turned(bmp, max, rot) {
   const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
   const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
-  const c = document.createElement('canvas'); c.width = rot ? h : w; c.height = rot ? w : h;
+  const c = document.createElement('canvas'); c.width = rot % 180 ? h : w; c.height = rot % 180 ? w : h;
   const g = c.getContext('2d', { willReadFrequently: true });
-  if (rot) { g.translate(h, 0); g.rotate(Math.PI / 2); }
-  g.drawImage(bmp, 0, 0, w, h);
+  g.translate(c.width / 2, c.height / 2); g.rotate(rot * Math.PI / 180);
+  g.drawImage(bmp, -w / 2, -h / 2, w, h);
+  return c;
+}
+// Barcode unreadable: have the server read the label text and take the code printed after "S/N:" or "ID:".
+// Tries the photo as taken, then upside down and sideways, because labels get photographed any way round.
+async function ocrSerial(file) {
+  const bmp = await createImageBitmap(file);
+  try {
+    for (const rot of [0, 180, 90, 270]) {
+      const { text } = await api('ocr', { data: turned(bmp, 1600, rot).toDataURL('image/jpeg', 0.8).split(',')[1] });
+      const sn = pickSerial(text); if (sn) return sn;
+    }
+    return null;
+  } finally { bmp.close?.(); }
+}
+function pickSerial(text) {
+  const t = String(text || '').toUpperCase(), digit = /\d/;
+  for (const m of t.matchAll(/\bS\s*\/?\s*N\s*[:;.]?\s*([A-Z0-9]{5,12})/g)) if (digit.test(m[1])) return m[1];
+  // "FCC ID:" on the same label is a radio approval number, not the unit's ID
+  for (const m of t.matchAll(/(FCC\s*)?\bID\s*[:;.]\s*([A-Z0-9]{6,12})/g)) if (!m[1] && digit.test(m[2])) return m[2];
+  return null;
+}
+function zxingDecode(bmp, max, rot) {
+  const c = turned(bmp, max, rot);
   try {
     const Z = window.ZXing, hints = new Map([[Z.DecodeHintType.TRY_HARDER, true]]);
     const reader = new Z.MultiFormatReader(); reader.setHints(hints);
@@ -420,7 +449,7 @@ function applyNoSN() {
   $('s2').hidden = no; $('snReq').hidden = no;
   $('snLabel').textContent = no ? 'เลขระบุเอง (ไม่บังคับ)' : 'S/N';
   $('sn').placeholder = no ? 'เช่น เลขที่เขียนบนถุงซิป A-17' : 'ถ่ายรูปฉลาก ② แล้วระบบจะกรอกให้';
-  $('snHint').textContent = no ? 'ใช้เลขนี้ค้นหาและเช็กงานซ้ำแทน S/N' : 'ระบบอ่านบาร์โค้ดจากรูป ② ให้ ถ้าอ่านผิดแก้ในช่องนี้ได้เลย';
+  $('snHint').textContent = no ? 'ใช้เลขนี้ค้นหาและเช็กงานซ้ำแทน S/N' : 'ระบบอ่าน S/N จากรูป ② ให้ ถ้าอ่านผิดแก้ในช่องนี้ได้เลย';
   checkDup();
 }
 $('noSN').onchange = applyNoSN;

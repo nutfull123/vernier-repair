@@ -74,6 +74,28 @@ const ACTIONS = {
     return { fileId: file.getId() };
   },
 
+  // Reads the text on a label photo with Google's OCR: Drive converts the image to a Doc,
+  // we read the Doc's text back and trash it. Free, no API key.
+  ocr: req => {
+    const data = String(req.data || '');
+    if (!data) throw new Error('ไม่มีไฟล์รูป');
+    if (data.length > 3e6) throw new Error('รูปใหญ่เกินไป'); // Drive OCR accepts images up to 2 MB
+    const opt = { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true };
+    const fetch = (url, extra) => {
+      const r = UrlFetchApp.fetch(url, Object.assign({}, opt, extra));
+      if (r.getResponseCode() >= 300) throw new Error('อ่านข้อความไม่สำเร็จ: ' + r.getContentText().slice(0, 200));
+      return r.getContentText();
+    };
+    const b = 'ocr' + Utilities.getUuid();
+    const meta = JSON.stringify({ name: 'ocr-temp', mimeType: 'application/vnd.google-apps.document' });
+    const id = JSON.parse(fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&ocrLanguage=en', {
+      method: 'post', contentType: 'multipart/related; boundary=' + b,
+      payload: `--${b}\r\nContent-Type: application/json\r\n\r\n${meta}\r\n--${b}\r\nContent-Type: image/jpeg\r\nContent-Transfer-Encoding: base64\r\n\r\n${data}\r\n--${b}--`,
+    })).id;
+    try { return { text: fetch(`https://www.googleapis.com/drive/v3/files/${id}/export?mimeType=text/plain`) }; }
+    finally { DriveApp.getFileById(id).setTrashed(true); }
+  },
+
   create: (req, cfg) => withLock(() => {
     const t = ticketFields(req.ticket || {});
     if (!t.photos) throw new Error('ต้องมีรูปอุปกรณ์อย่างน้อย 1 รูป');
