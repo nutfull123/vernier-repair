@@ -4,6 +4,8 @@
 
 ข้อมูลเก็บใน Google Sheet และรูปเก็บใน Google Drive ของบัญชี Google ที่ติดตั้ง ไม่มีค่าใช้จ่าย
 
+**เปิดใช้งาน:** https://nutfull123.github.io/vernier-repair/ (GitHub Pages อัปเดตเองทุกครั้งที่ push ขึ้น branch `main`)
+
 ## ไฟล์ในโปรเจกต์
 
 | ไฟล์ | หน้าที่ |
