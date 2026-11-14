@@ -10,7 +10,8 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if (e.request.method !== 'GET' || u.hostname.endsWith('google.com') || u.hostname.endsWith('googleusercontent.com')) return;
-  e.respondWith(fetch(e.request).then(r => {
+  // no-cache: always ask the server whether our own files changed, so a new version shows up on the first reload
+  e.respondWith(fetch(e.request, u.origin === location.origin ? { cache: 'no-cache' } : undefined).then(r => {
     if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
     return r;
   }).catch(() => caches.match(e.request)));
