@@ -203,7 +203,7 @@ function renderQueue() {
         ? `<button class="btn sm" data-act="take" data-id="${esc(t.id)}">รับงาน</button>`
         : `<button class="btn sm" data-act="done" data-id="${esc(t.id)}">ซ่อมเสร็จ</button><button class="btn sm ghost" data-act="fail" data-id="${esc(t.id)}">ซ่อมไม่ได้</button>`) +
       `<button class="btn sm ghost" data-act="edit" data-id="${esc(t.id)}">แก้ไข</button><button class="btn sm ghost danger-text" data-act="del" data-id="${esc(t.id)}">ลบ</button>`)).join('')
-      : '<p class="empty">ไม่มีงานค้าง</p>';
+      : '<p class="empty"><img src="icons/mascot.png" width="400" height="320" alt="">ไม่มีงานค้าง</p>';
   });
 }
 let histStatus = 'all';
