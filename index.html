@@ -105,11 +105,14 @@
           <p class="tip">ถ่าย 2 รูปดีที่สุด: รูปอุปกรณ์ทั้งตัว 1 รูป และรูปฉลาก S/N ที่เห็นบาร์โค้ดชัดๆ 1 รูป</p>
           <div class="shots">
             <div class="shot req-shot" id="s1"><b>① อุปกรณ์ทั้งตัว</b>
-              <div class="pick"><label class="pb"><svg aria-hidden="true"><use href="#i-camera"/></svg>ถ่ายรูป<input type="file" accept="image/*" capture="environment" data-slot="f1"></label><label class="pb"><svg aria-hidden="true"><use href="#i-image"/></svg>แนบรูป<input type="file" accept="image/*" data-slot="f1"></label></div></div>
+              <div class="pick"><label class="pb"><svg aria-hidden="true"><use href="#i-camera"/></svg>ถ่ายรูป<input type="file" accept="image/*" capture="environment" data-slot="f1"></label><label class="pb"><svg aria-hidden="true"><use href="#i-image"/></svg>แนบรูป<input type="file" accept="image/*" data-slot="f1"></label></div>
+              <div class="acts"><button type="button" class="pb" data-view="f1">ดูรูป</button><button type="button" class="pb" data-del="f1">ลบรูป</button></div></div>
             <div class="shot req-shot" id="s2"><b>② ฉลาก S/N</b>
-              <div class="pick"><label class="pb"><svg aria-hidden="true"><use href="#i-camera"/></svg>ถ่ายรูป<input type="file" accept="image/*" capture="environment" data-slot="f2"></label><label class="pb"><svg aria-hidden="true"><use href="#i-image"/></svg>แนบรูป<input type="file" accept="image/*" data-slot="f2"></label></div></div>
+              <div class="pick"><label class="pb"><svg aria-hidden="true"><use href="#i-camera"/></svg>ถ่ายรูป<input type="file" accept="image/*" capture="environment" data-slot="f2"></label><label class="pb"><svg aria-hidden="true"><use href="#i-image"/></svg>แนบรูป<input type="file" accept="image/*" data-slot="f2"></label></div>
+              <div class="acts"><button type="button" class="pb" data-view="f2">ดูรูป</button><button type="button" class="pb" data-del="f2">ลบรูป</button></div></div>
             <div class="shot extra" id="s3"><b id="s3label">รูปเพิ่มเติม</b><span class="hint">ไม่บังคับ สูงสุด 3 รูป</span>
               <div class="pick"><label class="pb"><svg aria-hidden="true"><use href="#i-camera"/></svg>ถ่ายรูป<input type="file" accept="image/*" capture="environment" data-slot="f3"></label><label class="pb"><svg aria-hidden="true"><use href="#i-image"/></svg>แนบรูป<input type="file" accept="image/*" multiple data-slot="f3"></label></div></div>
+            <div id="s3thumbs" class="mine" hidden></div>
           </div>
           <div id="oldPhotos" class="thumbs" hidden></div>
         </fieldset>
@@ -172,7 +175,8 @@
     </div></nav>
   </div>
 </div>
-<div id="modalRoot"></div>
+<dialog id="viewer" class="viewer"><img alt="รูปที่แนบ"><button type="button" class="btn">ปิด</button></dialog>
+  <div id="modalRoot"></div>
 <div id="toastRoot" aria-live="polite"></div>
 </body>
 </html>

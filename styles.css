@@ -132,11 +132,22 @@ textarea.in { min-height: 104px; resize: vertical }
 .shot.has > b { position: relative; z-index: 1; background: rgba(0, 0, 0, .6); color: #fff; border-radius: 6px; padding: 0 6px }
 .pick { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 6px; width: 100% }
 .pb { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; border-radius: 10px; background: var(--surface);
-  border: 1.5px solid var(--line); font-weight: 600; font-size: 14px; cursor: pointer; color: var(--fg); padding: 0 10px }
+  border: 1.5px solid var(--line); font-family: inherit; font-weight: 600; font-size: 14px; cursor: pointer; color: var(--fg); padding: 0 10px }
 .pb svg { width: 18px; height: 18px }
 .pb input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100% }
 .pb:focus-within { outline: 3px solid var(--accent); outline-offset: 1px }
 .shot.has .pb { background: rgba(255, 255, 255, .94); color: #15201c; border-color: transparent }
+.shot .acts { display: none; position: relative; z-index: 1; flex-direction: column; gap: 6px; width: 100% }
+.shot.has .acts { display: flex }
+.shot.has .pick { display: none }
+.mine { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap }
+.mine > div { display: flex; flex-direction: column; gap: 6px; width: 104px }
+.thumb { padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: var(--sunk); cursor: pointer }
+.thumb img { display: block; width: 104px; height: 78px; object-fit: cover }
+.viewer { border: 0; padding: 0; background: #000; width: 100vw; height: 100dvh; max-width: none; max-height: none }
+.viewer[open] { display: flex; flex-direction: column }
+.viewer img { flex: 1; min-height: 0; width: 100%; object-fit: contain }
+.viewer .btn { margin: 12px 16px calc(12px + env(safe-area-inset-bottom)) }
 .extra { grid-column: 1 / -1; min-height: 64px; flex-direction: row; flex-wrap: wrap }
 .extra .pick { flex-direction: row; width: auto }
 .check { display: flex; gap: 10px; align-items: center; font-weight: 600; cursor: pointer; min-height: 44px }

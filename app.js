@@ -361,13 +361,34 @@ document.addEventListener('click', e => { if (!e.target.closest('.combo')) close
 
 function setShot(id, file) {
   const el = $(id); el.querySelector('img')?.remove(); el.classList.toggle('has', !!file); el.classList.remove('missing');
-  if (file) { const img = document.createElement('img'); img.alt = ''; img.src = URL.createObjectURL(file); el.prepend(img); }
+  if (file) { const img = document.createElement('img'); img.alt = ''; img.src = photoUrl(file); el.prepend(img); }
 }
+const urlOf = new WeakMap(); // one preview URL per picked file
+function photoUrl(file) { if (!urlOf.has(file)) urlOf.set(file, URL.createObjectURL(file)); return urlOf.get(file); }
+function renderExtras() {
+  $('s3label').textContent = files.f3.length ? `รูปเพิ่มเติม ${files.f3.length}/3 รูป` : 'รูปเพิ่มเติม';
+  $('s3thumbs').hidden = !files.f3.length;
+  $('s3thumbs').innerHTML = files.f3.map((f, i) => `<div><button type="button" class="thumb" data-view="${i}" aria-label="ดูรูปเพิ่มเติม ${i + 1}"><img alt="" src="${photoUrl(f)}"></button>`
+    + `<button type="button" class="pb" data-del="${i}">ลบรูป</button></div>`).join('');
+}
+// View a picked photo full screen, or remove it so the slot can be filled again.
+$('reportForm').addEventListener('click', e => {
+  const b = e.target.closest('[data-view],[data-del]'); if (!b) return;
+  const key = b.dataset.view ?? b.dataset.del;
+  if (b.dataset.view != null) { $('viewer').querySelector('img').src = photoUrl(files[key] || files.f3[key]); $('viewer').showModal(); return; }
+  if (key !== 'f1' && key !== 'f2') { files.f3.splice(key, 1); renderExtras(); return; }
+  files[key] = null; setShot(key === 'f1' ? 's1' : 's2', null);
+  if (key === 'f2') { // drop the S/N that was read from this photo, but keep one typed by hand
+    if ($('sn').value === snAuto) $('sn').value = '';
+    snAuto = ''; applyNoSN(); dupOk = false; checkDup();
+  }
+});
+$('viewer').addEventListener('click', () => $('viewer').close());
 $('reportForm').addEventListener('change', e => {
   const slot = e.target.dataset?.slot; if (!slot) return;
   const picked = [...e.target.files]; e.target.value = ''; // reset so the same photo can be chosen again
   if (!picked.length) return;
-  if (slot === 'f3') { files.f3 = [...files.f3, ...picked].slice(0, 3); $('s3label').textContent = `รูปเพิ่มเติม ${files.f3.length}/3 รูป`; return; }
+  if (slot === 'f3') { files.f3 = [...files.f3, ...picked].slice(0, 3); renderExtras(); return; }
   files[slot] = picked[0]; setShot(slot === 'f1' ? 's1' : 's2', picked[0]);
   if (slot === 'f2') readBarcode(picked[0]);
 });
@@ -469,7 +490,7 @@ function checkDup() {
 
 function resetForm() {
   $('reportForm').reset(); chosen = null; files = { f1: null, f2: null, f3: [] }; dupOk = false; snAuto = '';
-  setShot('s1', null); setShot('s2', null); $('s3label').textContent = 'รูปเพิ่มเติม';
+  setShot('s1', null); setShot('s2', null); renderExtras();
   $('picked').hidden = true; pq.hidden = false; $('dym').hidden = true; $('formErr').hidden = true; $('ugWrap').classList.remove('on');
   $('oldPhotos').hidden = true; $('oldPhotos').innerHTML = ''; $('s1').classList.add('req-shot'); $('s2').classList.add('req-shot');
   document.querySelectorAll('#reportForm [aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
