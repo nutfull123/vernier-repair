@@ -1,0 +1,492 @@
+<title>Vernier แจ้งซ่อม</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one phone-width app column; bottom tab bar; work-order cards with status stripes */
+:root{
+  --bg:#e9eeec; --surface:#ffffff; --sunk:#f3f6f5; --fg:#15201c; --muted:#5a6863; --line:#d3dbd8;
+  --accent:#0b6b57; --accent-fg:#ffffff; --accent-soft:#dcefe9;
+  --urgent:#c4301f; --urgent-fg:#ffffff; --urgent-soft:#fbe3df;
+  --doing:#a86a0c; --doing-soft:#fbeed3; --done:#2b7a4b; --done-soft:#dcf1e3; --fail:#6b7370; --fail-soft:#e6e9e8;
+  --font:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1513; --surface:#18211e; --sunk:#121a17; --fg:#e6eeeb; --muted:#97a6a0; --line:#2b3733;
+  --accent:#3fbf9c; --accent-fg:#06231b; --accent-soft:#163a31;
+  --urgent:#d9432f; --urgent-fg:#ffffff; --urgent-soft:#3a1c18;
+  --doing:#e0a845; --doing-soft:#3a2c12; --done:#5cc486; --done-soft:#16331f; --fail:#9aa3a0; --fail-soft:#252d2a;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1513; --surface:#18211e; --sunk:#121a17; --fg:#e6eeeb; --muted:#97a6a0; --line:#2b3733;
+  --accent:#3fbf9c; --accent-fg:#06231b; --accent-soft:#163a31;
+  --urgent:#d9432f; --urgent-fg:#ffffff; --urgent-soft:#3a1c18;
+  --doing:#e0a845; --doing-soft:#3a2c12; --done:#5cc486; --done-soft:#16331f; --fail:#9aa3a0; --fail-soft:#252d2a;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{max-width:440px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;background:var(--bg)}
+.demo{background:var(--fg);color:var(--bg);font-size:12px;text-align:center;padding-block:4px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+header.top h1{font-size:18px;margin:0;font-weight:700;flex:1;text-wrap:balance}
+.back{border:0;background:var(--sunk);border-radius:10px;width:36px;height:36px;cursor:pointer;font-size:18px}
+main{flex:1;display:flex;flex-direction:column;gap:14px;padding-block:16px 96px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.muted{color:var(--muted)} .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+label.f small{font-weight:400;color:var(--muted)}
+.in{width:100%;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 12px;min-height:46px}
+.in:focus,button:focus-visible,select:focus-visible{outline:3px solid var(--accent-soft);border-color:var(--accent);outline-offset:0}
+textarea.in{min-height:96px;resize:vertical}
+.btn{border:0;border-radius:12px;padding:13px 16px;font-weight:700;cursor:pointer;background:var(--accent);color:var(--accent-fg);min-height:48px}
+.btn.ghost{background:var(--sunk);color:var(--fg);border:1.5px solid var(--line)}
+.btn.danger{background:var(--urgent);color:var(--urgent-fg)}
+.btn.sm{padding:8px 12px;min-height:38px;font-size:14px;border-radius:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>.btn{flex:1}
+.err{color:var(--urgent);font-size:13px;font-weight:500}
+/* login */
+.login{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;padding-block:32px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.mark{width:56px;height:56px;border-radius:16px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:20px}
+.login h2{margin:0;font-size:26px;line-height:1.25}
+/* home */
+.hello{display:flex;justify-content:space-between;align-items:baseline}
+.tiles{display:grid;gap:12px}
+.tile{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:14px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:16px;padding:16px;cursor:pointer}
+.tile .ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:24px;background:var(--sunk)}
+.tile b{display:block;font-size:17px}
+.tile .count{font-family:var(--mono);font-size:22px;font-weight:600}
+.tile.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.tile.primary .ic{background:rgba(255,255,255,.18)}
+.tile.primary .muted{color:inherit;opacity:.85}
+.alert{display:flex;gap:10px;align-items:center;background:var(--urgent);color:var(--urgent-fg);border-radius:12px;padding:12px 14px;font-weight:600;cursor:pointer;border:0;text-align:left;width:100%}
+/* combobox */
+.combo{position:relative}
+.sugg{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;z-index:4;max-height:260px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.sugg button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;background:none;padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--line)}
+.sugg button:hover,.sugg button:focus-visible{background:var(--accent-soft)}
+.sugg .code{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.dym{background:var(--doing-soft);border-radius:10px;padding:10px 12px;font-size:14px}
+.dym button{border:0;background:none;color:var(--accent);font-weight:700;cursor:pointer;padding:0;text-decoration:underline}
+.picked{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--accent-soft);border-radius:10px;padding:10px 12px}
+/* photos */
+.shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.shot{position:relative;aspect-ratio:4/3;max-width:100%;border:2px dashed var(--line);border-radius:12px;background:var(--sunk);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:8px;overflow:hidden;font-size:13px}
+.pick{position:relative;z-index:1;display:flex;flex-direction:column;gap:6px;width:100%}
+.pb{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;min-height:36px;border-radius:9px;background:var(--surface);border:1.5px solid var(--line);font-weight:600;font-size:13px;cursor:pointer;color:var(--fg)}
+.pb:focus-within{outline:3px solid var(--accent-soft);border-color:var(--accent)}
+.shot.has .pb{background:rgba(255,255,255,.92);color:#15201c;border-color:transparent}
+.extra .pick{flex-direction:row;width:auto}
+.extra .pb{padding:0 12px}
+.shot b{font-size:14px}
+.shot.req::after{content:"บังคับ";position:absolute;top:6px;right:6px;font-size:11px;background:var(--urgent);color:var(--urgent-fg);padding:1px 6px;border-radius:6px}
+.shot.has{border-style:solid;border-color:var(--accent)}
+.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pb input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.shot.has>b{position:relative;z-index:1;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;padding:0 6px}
+.extra{grid-column:1/-1;aspect-ratio:auto;min-height:56px;flex-direction:row;flex-wrap:wrap}
+.tip{font-size:13px;background:var(--accent-soft);border-radius:10px;padding:8px 12px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--done-soft);color:var(--done);font-weight:600}
+.check{display:flex;gap:10px;align-items:center;font-weight:600;cursor:pointer}
+.check input{width:22px;height:22px;accent-color:var(--accent)}
+.urgent-toggle{display:flex;align-items:center;gap:12px;border:2px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;background:var(--surface)}
+.urgent-toggle.on{background:var(--urgent);border-color:var(--urgent);color:var(--urgent-fg)}
+.urgent-toggle input{width:22px;height:22px;accent-color:var(--urgent)}
+.warn{border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.warn.hard{background:var(--urgent-soft);border:2px solid var(--urgent)}
+.warn.soft{background:var(--doing-soft);border:2px solid var(--doing)}
+/* cards */
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.card.urgent{background:var(--urgent);border-color:var(--urgent);color:var(--urgent-fg)}
+.card.urgent .muted{color:inherit;opacity:.85}
+.card summary{list-style:none;cursor:pointer;padding:14px;display:grid;grid-template-columns:1fr auto;gap:4px 10px}
+.card summary::-webkit-details-marker{display:none}
+.card summary .name{font-weight:700;font-size:16px;line-height:1.35;min-width:0}
+.card summary .meta{grid-column:1/-1;font-size:13px;display:flex;gap:4px 12px;flex-wrap:wrap}
+.pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;align-self:start}
+.p-wait{background:var(--sunk);color:var(--fg)} .p-doing{background:var(--doing-soft);color:var(--doing)}
+.p-done{background:var(--done-soft);color:var(--done)} .p-fail{background:var(--fail-soft);color:var(--fail)}
+.p-urgent{background:var(--urgent-fg);color:var(--urgent)}
+.body{border-top:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--surface);color:var(--fg)}
+.body .muted{color:var(--muted);opacity:1}
+dl.kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 12px;margin:0;font-size:14px}
+dl.kv dt{color:var(--muted)} dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.thumbs{display:flex;gap:8px;overflow-x:auto}
+.thumb{flex:0 0 88px;height:66px;border-radius:8px;background:repeating-linear-gradient(135deg,var(--sunk) 0 8px,var(--line) 8px 9px);display:grid;place-items:center;font-size:11px;color:var(--muted)}
+.log{background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.log b{font-size:13px;color:var(--muted);font-weight:600}
+.empty{text-align:center;padding:32px 8px;color:var(--muted)}
+.filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.filters .full{grid-column:1/-1}
+.seg{display:flex;background:var(--sunk);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;border-radius:8px;padding:8px;cursor:pointer;font-weight:600;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+/* nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .in-tabs{max-width:440px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+nav.tabs button{border:0;background:none;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;cursor:pointer;color:var(--muted);position:relative}
+nav.tabs button span{font-size:20px}
+nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:700}
+nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px);background:var(--urgent);color:#fff;font-size:10px;border-radius:999px;padding:0 5px;font-family:var(--mono)}
+/* modal + toast */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);color:var(--fg);width:100%;max-width:440px;border-radius:18px 18px 0 0;max-height:90%;overflow:auto;display:flex;flex-direction:column;gap:14px;padding-block:18px calc(18px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet h3{margin:0;font-size:18px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:30;font-size:14px;max-width:min(92vw,400px);text-align:center}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .2s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}}
+</style>
+
+<div class="app" id="app">
+  <div class="demo">ตัวอย่างหน้าจอ · ข้อมูลทั้งหมดเป็นข้อมูลสมมุติ ยังไม่บันทึกจริง</div>
+
+  <!-- LOGIN -->
+  <section id="v-login" class="login">
+    <div class="mark">V</div>
+    <h2>ระบบแจ้งซ่อม<br>อุปกรณ์ Vernier</h2>
+    <p class="muted" style="margin:0">เซนเซอร์ · LabQuest · อุปกรณ์เสริม</p>
+    <form id="loginForm" style="display:flex;flex-direction:column;gap:12px" novalidate>
+      <label class="f">ชื่อผู้ใช้<input class="in" id="lu" autocomplete="username" value="admin"></label>
+      <label class="f">รหัสผ่าน<input class="in" id="lp" type="password" autocomplete="current-password" value="1234"></label>
+      <div class="err" id="loginErr" hidden>ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
+      <button class="btn" type="submit">เข้าสู่ระบบ</button>
+      <p class="muted" style="margin:0;font-size:13px">ตัวอย่างนี้กรอกไว้ให้แล้ว (admin / 1234) ในแอปจริงเปลี่ยนรหัสได้จาก Google Sheet</p>
+    </form>
+  </section>
+
+  <div id="shell" hidden style="display:contents">
+    <header class="top">
+      <button class="back" id="backBtn" aria-label="กลับหน้าแรก" hidden>←</button>
+      <h1 id="title">หน้าแรก</h1>
+    </header>
+
+    <!-- HOME -->
+    <main id="v-home">
+      <div class="hello"><div><div class="muted" style="font-size:13px" id="today"></div><b style="font-size:20px">วันนี้มีอะไรเสียบ้าง?</b></div></div>
+      <button class="alert" id="urgentAlert" data-go="queue"></button>
+      <div class="tiles">
+        <button class="tile primary" data-go="report"><span class="ic">📷</span><span><b>แจ้งของพัง</b><span class="muted">ถ่ายรูป สแกน S/N แล้วส่ง</span></span><span></span></button>
+        <button class="tile" data-go="queue"><span class="ic">🔧</span><span><b>อุปกรณ์รอซ่อม</b><span class="muted">รอซ่อมและกำลังซ่อม</span></span><span class="count" id="cQueue"></span></button>
+        <button class="tile" data-go="history"><span class="ic">📋</span><span><b>ประวัติการซ่อม</b><span class="muted">ซ่อมเสร็จ / ซ่อมไม่ได้</span></span><span class="count" id="cHist"></span></button>
+      </div>
+      <button class="btn ghost" id="logout" type="button">ออกจากระบบ</button>
+    </main>
+
+    <!-- REPORT -->
+    <main id="v-report" hidden>
+      <form id="reportForm" style="display:flex;flex-direction:column;gap:16px" novalidate>
+        <label class="f">ชื่อผู้แจ้ง
+          <select class="in" id="reporter"></select>
+          <small>มือถือเครื่องนี้จะจำชื่อไว้ให้ครั้งหน้า</small>
+        </label>
+
+        <div class="f" style="display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px">
+          <label for="pq">ชื่ออุปกรณ์</label>
+          <div class="combo">
+            <input class="in" id="pq" placeholder="พิมพ์ชื่อหรือรหัส เช่น force, GDX-TMP, labquest" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sugg">
+            <div class="sugg" id="sugg" role="listbox" hidden></div>
+          </div>
+          <div id="dym" class="dym" hidden></div>
+          <div id="picked" class="picked" hidden></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <b style="font-size:14px">รูปถ่าย</b>
+          <div class="tip">ถ่าย 2 รูปดีที่สุด: รูปอุปกรณ์ทั้งตัว 1 รูป และรูปฉลาก S/N ให้เห็นบาร์โค้ดชัดๆ 1 รูป</div>
+          <div class="shots">
+            <div class="shot req" id="s1"><b>① อุปกรณ์ทั้งตัว</b><div class="pick"><label class="pb">📷 ถ่ายรูป<input type="file" accept="image/*" capture="environment" data-slot="f1"></label><label class="pb">🖼️ แนบรูป<input type="file" accept="image/*" data-slot="f1"></label></div></div>
+            <div class="shot req" id="s2"><b>② ฉลาก S/N</b><div class="pick"><label class="pb">📷 ถ่ายรูป<input type="file" accept="image/*" capture="environment" data-slot="f2"></label><label class="pb">🖼️ แนบรูป<input type="file" accept="image/*" data-slot="f2"></label></div></div>
+            <div class="shot extra" id="s3"><b>＋ รูปเพิ่มเติม</b><span class="muted" style="font-size:12px">(ไม่บังคับ สูงสุด 3 รูป)</span><div class="pick"><label class="pb">📷 ถ่ายรูป<input type="file" accept="image/*" capture="environment" data-slot="f3"></label><label class="pb">🖼️ แนบรูป<input type="file" accept="image/*" multiple data-slot="f3"></label></div></div>
+          </div>
+        </div>
+
+        <label class="check"><input type="checkbox" id="noSN"> เครื่องนี้ไม่มี S/N</label>
+        <label class="f"><span id="snLabel">S/N</span>
+          <input class="in mono" id="sn" placeholder="ถ่ายรูปฉลาก ② แล้วระบบจะกรอกให้" autocomplete="off">
+          <small id="snHint">ระบบอ่านบาร์โค้ดให้อัตโนมัติ ถ้าอ่านผิด แก้ในช่องนี้ได้เลย</small>
+        </label>
+        <div id="dupWarn" hidden></div>
+
+        <label class="f">ชื่อลูกค้า <small>ไม่บังคับ · เว้นว่างถ้าเป็นของบริษัท</small><input class="in" id="customer" placeholder="เช่น โรงเรียนสาธิตฯ"></label>
+        <label class="f">อาการเสีย<textarea class="in" id="symptom" placeholder="เช่น เปิดไม่ติด, ค่าที่วัดได้กระโดด, สายหลุด"></textarea></label>
+
+        <label class="urgent-toggle" id="ugWrap"><input type="checkbox" id="urgent"><span><b>ด่วน</b><br><span style="font-size:13px">ขึ้นเป็นอันดับแรกในหน้ารอซ่อม</span></span></label>
+
+        <div class="err" id="formErr" hidden></div>
+        <button class="btn" type="submit" id="submitBtn">ส่งแจ้งซ่อม</button>
+      </form>
+    </main>
+
+    <!-- QUEUE -->
+    <main id="v-queue" hidden>
+      <p class="muted" style="margin:0;font-size:13px">งานด่วนอยู่บนสุด ถัดไปเรียงตามงานที่แจ้งไว้นานที่สุด · แตะการ์ดเพื่อดูรายละเอียด</p>
+      <div id="queueList" style="display:flex;flex-direction:column;gap:10px"></div>
+    </main>
+
+    <!-- HISTORY -->
+    <main id="v-history" hidden>
+      <div class="filters">
+        <input class="in full" id="hq" placeholder="ค้นหาชื่ออุปกรณ์, S/N, ลูกค้า" aria-label="ค้นหา">
+        <label class="f" style="font-weight:500">ตั้งแต่<input class="in" type="date" id="hFrom"></label>
+        <label class="f" style="font-weight:500">ถึง<input class="in" type="date" id="hTo"></label>
+        <div class="seg full" role="group" aria-label="สถานะ">
+          <button type="button" data-st="all" aria-pressed="true">ทั้งหมด</button>
+          <button type="button" data-st="done" aria-pressed="false">ซ่อมเสร็จ</button>
+          <button type="button" data-st="fail" aria-pressed="false">ซ่อมไม่ได้</button>
+        </div>
+      </div>
+      <div id="histList" style="display:flex;flex-direction:column;gap:10px"></div>
+    </main>
+
+    <nav class="tabs" aria-label="เมนู"><div class="in-tabs">
+      <button data-go="home"><span>🏠</span>หน้าแรก</button>
+      <button data-go="report"><span>📷</span>แจ้งพัง</button>
+      <button data-go="queue"><span>🔧</span>รอซ่อม<i class="badge" id="navBadge"></i></button>
+      <button data-go="history"><span>📋</span>ประวัติ</button>
+    </div></nav>
+  </div>
+</div>
+<div id="modalRoot"></div>
+
+<script>
+// ---------- sample data (real app: from Google Sheets) ----------
+const PRODUCTS = [
+ ["Go Direct Force and Acceleration Sensor","GDX-FOR"],["Go Direct Temperature Probe","GDX-TMP"],["Go Direct pH Sensor","GDX-PH"],
+ ["Go Direct Motion Detector","GDX-MD"],["Go Direct Gas Pressure Sensor","GDX-GP"],["Go Direct O2 Gas Sensor","GDX-O2"],
+ ["Go Direct CO2 Gas Sensor","GDX-CO2"],["Go Direct Voltage Probe","GDX-VOLT"],["Go Direct Current Probe","GDX-CUR"],
+ ["Go Direct Light and Color Sensor","GDX-LC"],["Go Direct Sound Sensor","GDX-SND"],["Go Direct Conductivity Probe","GDX-CON"],
+ ["Go Direct Photogate","GDX-VPG"],["Go Direct EKG Sensor","GDX-EKG"],["Go Direct Respiration Belt","GDX-RB"],
+ ["Go Direct Hand Dynamometer","GDX-HD"],["Go Direct Optical Dissolved Oxygen Probe","GDX-ODO"],["Go Direct Radiation Monitor","GDX-RAD"],
+ ["Go Direct Rotary Motion Sensor","GDX-RMS"],["Go Direct Weather System","GDX-WTHR"],["Go Direct Sensor Cart","GDX-CART"],
+ ["Go Direct SpectroVis Plus Spectrophotometer","GDX-SVISPL"],["LabQuest 3","LABQ3"],["LabQuest 2","LABQ2"],
+ ["LabQuest Mini","LQ-MINI"],["LabQuest Stream","LQ-STREAM"],["Dual-Range Force Sensor","DFS-BTA"],["Stainless Steel Temperature Probe","TMP-BTA"]
+].map(([name,code])=>({name,code}));
+const STAFF = ["นัท","บอส","ฝน","ต้น","มิ้นท์","เจ","ปอนด์"];
+const now = new Date("2026-11-14T10:30:00");
+const h = n => new Date(now - n*3600e3);
+let seq = 100;
+let tickets = [
+ {id:seq++,name:"LabQuest 3",code:"LABQ3",sn:"LQ3-2211-0457",manual:false,customer:"โรงเรียนสาธิตฯ",symptom:"เปิดเครื่องแล้วค้างที่โลโก้ ชาร์จไฟแล้วไฟไม่ขึ้น",urgent:true,status:"wait",reporter:"ฝน",at:h(26),photos:3},
+ {id:seq++,name:"Go Direct Force and Acceleration Sensor",code:"GDX-FOR",sn:"0F1009283",manual:false,customer:"",symptom:"ค่าแรงกระโดดไปมาแม้ไม่มีแรงกด ลองรีเซ็ตแล้ว",urgent:true,status:"doing",reporter:"บอส",at:h(5),photos:2,tech:"นัท"},
+ {id:seq++,name:"Go Direct pH Sensor",code:"GDX-PH",sn:"1PH20031",manual:false,customer:"ม.เกษตรฯ",symptom:"ค่า pH ไม่นิ่ง น่าจะหัววัดเสื่อม",urgent:false,status:"wait",reporter:"มิ้นท์",at:h(72),photos:2},
+ {id:seq++,name:"Stainless Steel Temperature Probe",code:"TMP-BTA",sn:"ถุง A-17",manual:true,customer:"",symptom:"สายขาดตรงโคนหัววัด",urgent:false,status:"wait",reporter:"ต้น",at:h(30),photos:1},
+ {id:seq++,name:"Go Direct Motion Detector",code:"GDX-MD",sn:"0MD3302",manual:false,customer:"โรงเรียนบ้านสวน",symptom:"เชื่อมบลูทูธไม่ได้",urgent:false,status:"done",reporter:"ฝน",at:h(240),photos:2,
+  repair:{found:"แบตเตอรี่เสื่อม เก็บไฟไม่อยู่",method:"เปลี่ยนแบตเตอรี่ใหม่ อัปเดตเฟิร์มแวร์",check:"เชื่อมกับ Graphical Analysis ได้ วัดระยะ 0.5–2 ม. ค่าตรง",tech:"นัท",at:h(200)}},
+ {id:seq++,name:"Go Direct Force and Acceleration Sensor",code:"GDX-FOR",sn:"0F1009283",manual:false,customer:"",symptom:"กดปุ่มเปิดไม่ติด",urgent:false,status:"done",reporter:"บอส",at:h(900),photos:2,
+  repair:{found:"ปุ่มเปิดหลวม",method:"บัดกรีสวิตช์ใหม่",check:"เปิดปิด 20 ครั้ง ปกติ ค่าแรงสอบเทียบกับตุ้มน้ำหนัก 500 g ตรง",tech:"นัท",at:h(860)}},
+ {id:seq++,name:"LabQuest 2",code:"LABQ2",sn:"LQ2-1809-1120",manual:false,customer:"โรงเรียนสาธิตฯ",symptom:"จอแตก ทัชไม่ได้",urgent:false,status:"fail",reporter:"เจ",at:h(500),photos:3,
+  repair:{found:"จอและบอร์ดทัชเสียหายหนัก",method:"-",check:"-",reason:"ไม่มีอะไหล่จอ LabQuest 2 แล้ว แนะนำลูกค้าเปลี่ยนเป็น LabQuest 3",tech:"นัท",at:h(470)}},
+];
+const ST = {wait:["รอซ่อม","p-wait"],doing:["กำลังซ่อม","p-doing"],done:["ซ่อมเสร็จ","p-done"],fail:["ซ่อมไม่ได้","p-fail"]};
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = d => d.toLocaleString("th-TH",{day:"numeric",month:"short",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+const ago = d => { const m=(now-d)/6e4; return m<60?`${Math.round(m)} นาทีที่แล้ว`: m<1440?`${Math.round(m/60)} ชม.ที่แล้ว`:`${Math.round(m/1440)} วันที่แล้ว`; };
+const norm = s => s.toLowerCase().replace(/[^a-z0-9ก-๙]/g,"");
+const store = { get(k){try{return localStorage.getItem(k)}catch{return null}}, set(k,v){try{localStorage.setItem(k,v)}catch{}} };
+function bigrams(s){const a=[];for(let i=0;i<s.length-1;i++)a.push(s.slice(i,i+2));return a}
+function dice(a,b){ if(a.length<2||b.length<2) return 0; const A=bigrams(a),B=bigrams(b); let m=0; const pool=[...B];
+  for(const x of A){const i=pool.indexOf(x); if(i>=0){m++;pool.splice(i,1)}} return 2*m/(A.length+B.length); }
+function search(q){ const n=norm(q); if(!n) return {hits:[],guess:null};
+  const hits = PRODUCTS.filter(p=>norm(p.name+p.code).includes(n));
+  if(hits.length) return {hits:hits.slice(0,8),guess:null};
+  // typo: compare against code and every word window of the name
+  let best=null,score=0;
+  for(const p of PRODUCTS){ const words=p.name.toLowerCase().split(/\s+/); const cands=[norm(p.code),norm(p.name)];
+    for(let i=0;i<words.length;i++) for(let j=i+1;j<=Math.min(words.length,i+3);j++) cands.push(norm(words.slice(i,j).join("")));
+    for(const c of cands){const s=dice(n,c); if(s>score){score=s;best=p}} }
+  return {hits:[],guess:score>=0.4?best:null};
+}
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.append(t); setTimeout(()=>t.remove(),2600); }
+function modal(html, onReady){ const r=$("modalRoot"); r.innerHTML=`<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+  $("scrim").addEventListener("click",e=>{if(e.target.id==="scrim")closeModal()}); onReady&&onReady(); r.querySelector("button,input,textarea")?.focus(); }
+function closeModal(){ $("modalRoot").innerHTML=""; }
+function confirmBox(title,text,okLabel,danger,onOk){
+  modal(`<h3>${title}</h3><div>${text}</div><div class="row"><button class="btn ghost" id="mNo">ยกเลิก</button><button class="btn ${danger?"danger":""}" id="mOk">${okLabel}</button></div>`,
+    ()=>{ $("mNo").onclick=closeModal; $("mOk").onclick=()=>{closeModal();onOk()}; });
+}
+
+// ---------- navigation ----------
+const TITLES={home:"หน้าแรก",report:"แจ้งของพัง",queue:"อุปกรณ์รอซ่อม",history:"ประวัติการซ่อม"};
+let view="home";
+function go(v){ view=v; for(const k of Object.keys(TITLES)) $("v-"+k).hidden = k!==v;
+  $("title").textContent = v==="report"&&editing ? "แก้ไขใบแจ้งซ่อม" : TITLES[v]; $("backBtn").hidden = v==="home";
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-current", b.dataset.go===v?"page":"false"));
+  if(v!=="report"&&editing){editing=null;resetForm()}
+  render(); window.scrollTo(0,0); }
+document.addEventListener("click",e=>{const b=e.target.closest("[data-go]"); if(b) go(b.dataset.go)});
+$("backBtn").onclick=()=>go("home");
+
+$("loginForm").addEventListener("submit",e=>{ e.preventDefault();
+  const ok = $("lu").value.trim()==="admin" && $("lp").value==="1234"; $("loginErr").hidden=ok;
+  if(ok){ $("v-login").hidden=true; $("shell").hidden=false; go("home"); } });
+$("logout").onclick=()=>{ $("shell").hidden=true; $("v-login").hidden=false; };
+
+// ---------- render ----------
+const open = () => tickets.filter(t=>t.status==="wait"||t.status==="doing");
+function render(){
+  const o=open(), u=o.filter(t=>t.urgent).length;
+  $("today").textContent = now.toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  $("cQueue").textContent=o.length; $("cHist").textContent=tickets.length-o.length;
+  $("urgentAlert").hidden=!u; $("urgentAlert").innerHTML=`<span style="font-size:20px">⚠️</span><span>มีงานด่วน ${u} รายการรอซ่อมอยู่ · แตะเพื่อดู</span>`;
+  $("navBadge").textContent=o.length; $("navBadge").hidden=!o.length;
+  if(view==="queue") renderQueue(); if(view==="history") renderHistory();
+}
+function detail(t){
+  const r=t.repair;
+  return `<dl class="kv">
+    <dt>${t.manual?"เลขระบุเอง":"S/N"}</dt><dd class="mono">${esc(t.sn)||"-"}</dd>
+    <dt>รหัสสินค้า</dt><dd class="mono">${esc(t.code)||"-"}</dd>
+    <dt>ลูกค้า</dt><dd>${esc(t.customer)||"ของบริษัท"}</dd>
+    <dt>ผู้แจ้ง</dt><dd>${esc(t.reporter)} · ${fmt(t.at)}</dd>
+    ${t.tech&&!r?`<dt>ผู้ซ่อม</dt><dd>${esc(t.tech)}</dd>`:""}
+  </dl>
+  <div class="log"><b>อาการที่แจ้ง</b>${esc(t.symptom)}</div>
+  <div class="thumbs">${Array.from({length:t.photos},(_,i)=>`<div class="thumb">${i===0?"อุปกรณ์":i===1&&!t.manual?"ฉลาก S/N":"รูป "+(i+1)}</div>`).join("")}</div>
+  ${r?`<div class="log"><b>บันทึกการซ่อม · ${esc(r.tech)} · ${fmt(r.at)}</b>
+     <div><span class="muted">อาการที่พบจริง:</span> ${esc(r.found)}</div>
+     ${t.status==="fail"?`<div><span class="muted">เหตุผลที่ซ่อมไม่ได้:</span> ${esc(r.reason)}</div>`:
+     `<div><span class="muted">วิธีซ่อม:</span> ${esc(r.method)}</div><div><span class="muted">ตรวจเช็คหลังซ่อม:</span> ${esc(r.check)}</div>`}</div>`:""}`;
+}
+function card(t,actions){
+  const [lbl,cls]=ST[t.status]; const isU=t.urgent&&(t.status==="wait"||t.status==="doing");
+  return `<details class="card ${isU?"urgent":""}"><summary>
+    <span class="name">${esc(t.name)}</span>
+    <span class="pill ${cls}">${lbl}</span>
+    <span class="meta">${isU?`<span class="pill p-urgent">ด่วน</span>`:""}<span class="mono">${esc(t.sn)||"ไม่มี S/N"}</span><span>${esc(t.customer)||"ของบริษัท"}</span><span>${t.repair?fmt(t.repair.at):ago(t.at)}</span></span>
+  </summary><div class="body">${detail(t)}<div class="row">${actions(t)}</div></div></details>`;
+}
+function renderQueue(){
+  const list=open().sort((a,b)=>(b.urgent-a.urgent)||(a.at-b.at));
+  $("queueList").innerHTML = list.length? list.map(t=>card(t,t=>
+    (t.status==="wait"?`<button class="btn sm" data-act="take" data-id="${t.id}">รับงาน</button>`:
+     `<button class="btn sm" data-act="done" data-id="${t.id}">ซ่อมเสร็จ</button><button class="btn sm ghost" data-act="fail" data-id="${t.id}">ซ่อมไม่ได้</button>`)+
+    `<button class="btn sm ghost" data-act="edit" data-id="${t.id}">แก้ไข</button><button class="btn sm ghost" data-act="del" data-id="${t.id}" style="color:var(--urgent)">ลบ</button>`)).join("")
+    : `<div class="empty">ไม่มีงานค้าง 🎉</div>`;
+}
+let hState="all";
+function renderHistory(){
+  const q=norm($("hq").value), f=$("hFrom").value?new Date($("hFrom").value+"T00:00"):null, to=$("hTo").value?new Date($("hTo").value+"T23:59"):null;
+  const list=tickets.filter(t=>(t.status==="done"||t.status==="fail")&&(hState==="all"||t.status===hState)
+    &&(!q||norm(t.name+t.code+t.sn+t.customer).includes(q))&&(!f||t.repair.at>=f)&&(!to||t.repair.at<=to))
+    .sort((a,b)=>b.repair.at-a.repair.at);
+  $("histList").innerHTML = list.length? list.map(t=>card(t,t=>`<button class="btn sm ghost" data-act="del" data-id="${t.id}" style="color:var(--urgent)">ลบ</button>`)).join("")
+    : `<div class="empty">ไม่พบรายการที่ตรงกับตัวกรอง</div>`;
+}
+["hq","hFrom","hTo"].forEach(id=>$(id).addEventListener("input",renderHistory));
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{hState=b.dataset.st;
+  document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));renderHistory()});
+
+// ---------- queue actions ----------
+const staffOpts = sel => STAFF.map(s=>`<option ${s===sel?"selected":""}>${s}</option>`).join("");
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]"); if(!b) return; const t=tickets.find(x=>x.id==b.dataset.id); if(!t) return;
+  const act=b.dataset.act;
+  if(act==="take"){ modal(`<h3>รับงาน: ${esc(t.name)}</h3><label class="f">ผู้ซ่อม<select class="in" id="mTech">${staffOpts(store.get("tech")||"นัท")}</select></label>
+      <div class="row"><button class="btn ghost" id="mNo">ยกเลิก</button><button class="btn" id="mOk">เริ่มซ่อม</button></div>`,()=>{
+      $("mNo").onclick=closeModal; $("mOk").onclick=()=>{t.status="doing";t.tech=$("mTech").value;store.set("tech",t.tech);closeModal();toast("เปลี่ยนสถานะเป็น \"กำลังซ่อม\" แล้ว");render()}; }); }
+  if(act==="done"||act==="fail"){ const fail=act==="fail";
+    modal(`<h3>${fail?"บันทึก: ซ่อมไม่ได้":"บันทึกการซ่อม"}</h3><div class="muted">${esc(t.name)} · <span class="mono">${esc(t.sn)}</span></div>
+      <label class="f">อาการที่พบจริง<textarea class="in" id="mFound"></textarea></label>
+      ${fail?`<label class="f">เหตุผลที่ซ่อมไม่ได้<textarea class="in" id="mReason" placeholder="เช่น ไม่มีอะไหล่, เสียหายเกินซ่อม"></textarea></label>`:
+      `<label class="f">วิธีซ่อม<textarea class="in" id="mMethod"></textarea></label>
+       <label class="f">วิธีตรวจเช็คหลังซ่อม<textarea class="in" id="mCheck" placeholder="เช่น เทียบค่ากับตุ้มน้ำหนักมาตรฐาน, ทดสอบเชื่อมต่อ 10 นาที"></textarea></label>
+       <div class="shot extra" style="min-height:52px"><b>＋ รูปหลังซ่อม</b><span class="muted" style="font-size:12px">(ไม่บังคับ)</span><div class="pick"><label class="pb">📷 ถ่ายรูป<input type="file" accept="image/*" capture="environment"></label><label class="pb">🖼️ แนบรูป<input type="file" accept="image/*"></label></div></div>`}
+      <label class="f">ผู้ซ่อม<select class="in" id="mTech">${staffOpts(t.tech||store.get("tech"))}</select></label>
+      <div class="err" id="mErr" hidden>กรอกช่องที่ยังว่างให้ครบ</div>
+      <div class="row"><button class="btn ghost" id="mNo">ยกเลิก</button><button class="btn" id="mOk">${fail?"ย้ายไปประวัติ":"ซ่อมเสร็จ · ย้ายไปประวัติ"}</button></div>`,()=>{
+      $("mNo").onclick=closeModal; $("mOk").onclick=()=>{
+        const v=id=>$(id)?.value.trim(); const need=fail?[v("mFound"),v("mReason")]:[v("mFound"),v("mMethod"),v("mCheck")];
+        if(need.some(x=>!x)){$("mErr").hidden=false;return}
+        t.repair={found:v("mFound"),method:v("mMethod")||"-",check:v("mCheck")||"-",reason:v("mReason"),tech:v("mTech"),at:new Date()};
+        t.status=act; closeModal(); toast(fail?"บันทึกว่าซ่อมไม่ได้แล้ว":"บันทึกการซ่อมแล้ว ย้ายไปหน้าประวัติ"); render(); }; }); }
+  if(act==="del") confirmBox("ลบรายการนี้?",`<b>${esc(t.name)}</b> <span class="mono">${esc(t.sn)}</span><br><span class="muted">ลบแล้วกู้คืนไม่ได้ รวมถึงรูปและบันทึกการซ่อม</span>`,"ลบถาวร",true,
+      ()=>{tickets=tickets.filter(x=>x!==t);toast("ลบแล้ว");render()});
+  if(act==="edit"){ editing=t; go("report"); fillForm(t); }
+});
+
+// ---------- report form ----------
+let editing=null, chosen=null, files={f1:null,f2:null,f3:[]}, dupOk=false;
+$("reporter").innerHTML = `<option value="">— เลือกชื่อ —</option>`+staffOpts(store.get("reporter"));
+const pq=$("pq"), sugg=$("sugg");
+function pick(p){ chosen=p; pq.value=""; sugg.hidden=true; pq.setAttribute("aria-expanded","false"); $("dym").hidden=true;
+  $("picked").hidden=false; $("picked").innerHTML=`<span><b>${esc(p.name)}</b><br><span class="mono muted" style="font-size:12px">${esc(p.code||"ไม่อยู่ในรายการสินค้า")}</span></span><button type="button" class="btn sm ghost" id="unpick">เปลี่ยน</button>`;
+  $("unpick").onclick=()=>{chosen=null;$("picked").hidden=true;pq.hidden=false;pq.focus()}; pq.hidden=true; }
+pq.addEventListener("input",()=>{
+  const {hits,guess}=search(pq.value);
+  sugg.innerHTML=hits.map((p,i)=>`<button type="button" role="option" data-i="${PRODUCTS.indexOf(p)}"><span>${esc(p.name)}</span><span class="code">${esc(p.code)}</span></button>`).join("");
+  sugg.hidden=!hits.length; pq.setAttribute("aria-expanded",String(!!hits.length));
+  const d=$("dym"); d.hidden = !(pq.value.trim().length>=3 && !hits.length);
+  if(!d.hidden) d.innerHTML = guess? `คุณหมายถึง <button type="button" id="dymYes">${esc(guess.name)} (${esc(guess.code)})</button> หรือเปล่า?`
+    : `ไม่พบในรายการสินค้า · ถ้าเป็นรุ่นเก่า ส่งด้วยชื่อที่พิมพ์ได้ (ระบบจะถามยืนยันอีกครั้ง)`;
+  if(guess) $("dymYes").onclick=()=>pick(guess);
+});
+sugg.addEventListener("click",e=>{const b=e.target.closest("[data-i]"); if(b) pick(PRODUCTS[b.dataset.i])});
+document.addEventListener("click",e=>{ if(!e.target.closest(".combo")) sugg.hidden=true; });
+
+function setShot(id,file){ const el=$(id); el.querySelector("img")?.remove(); el.classList.toggle("has",!!file);
+  if(file){ const img=document.createElement("img"); img.alt=""; img.src=URL.createObjectURL(file); el.prepend(img); } }
+// each slot has two inputs: "ถ่ายรูป" (capture → opens camera) and "แนบรูป" (no capture → photo library / files)
+$("reportForm").addEventListener("change",e=>{ const slot=e.target.dataset?.slot; if(!slot) return; const picked=[...e.target.files]; e.target.value="";
+  if(!picked.length) return;
+  if(slot==="f3"){ files.f3=[...files.f3,...picked].slice(0,3); const s=$("s3"); s.classList.toggle("has",false);
+    s.querySelector("b").textContent=`＋ รูปเพิ่มเติม ${files.f3.length}/3 รูป`; return; }
+  files[slot]=picked[0]; setShot(slot==="f1"?"s1":"s2",files[slot]);
+  if(slot==="f2"){ // mockup: pretend the barcode was decoded (real app: ZXing reads it from this photo)
+    $("sn").value="1B2031447"; $("snHint").innerHTML=`<span class="chip">✓ อ่านจากบาร์โค้ดแล้ว</span> ตรวจกับฉลากอีกครั้ง ถ้าผิดแก้ได้เลย · (ตัวอย่าง: ลองพิมพ์ <span class="mono">0F1009283</span> เพื่อดูคำเตือนส่งซ้ำ)`; checkDup(); } });
+$("noSN").onchange=()=>{ const no=$("noSN").checked; $("s2").hidden=no;
+  $("snLabel").textContent = no?"เลขระบุเอง (ไม่บังคับ)":"S/N";
+  $("sn").placeholder = no?"เช่น เลขที่เขียนบนถุงซิป A-17":"ถ่ายรูปฉลาก ② แล้วระบบจะกรอกให้";
+  $("snHint").textContent = no?"ใช้เลขนี้ค้นหาและเช็กงานซ้ำแทน S/N":"ระบบอ่านบาร์โค้ดให้อัตโนมัติ ถ้าอ่านผิด แก้ในช่องนี้ได้เลย"; checkDup(); };
+$("sn").addEventListener("input",()=>{dupOk=false;checkDup()});
+$("urgent").onchange=()=>$("ugWrap").classList.toggle("on",$("urgent").checked);
+
+function checkDup(){
+  const sn=norm($("sn").value), box=$("dupWarn");
+  const same = sn? tickets.filter(t=>t!==editing&&norm(t.sn)===sn):[];
+  const live=same.filter(t=>t.status==="wait"||t.status==="doing"), past=same.filter(t=>t.status==="done"||t.status==="fail");
+  box.hidden=!same.length; if(!same.length){dupOk=true;return}
+  box.innerHTML = (live.length?`<div class="warn hard"><b>⚠️ เครื่องนี้มีงานค้างอยู่แล้ว</b>${live.map(t=>`<div>${esc(t.name)} · ${ST[t.status][0]} · แจ้งเมื่อ ${fmt(t.at)}<br><span class="muted">"${esc(t.symptom)}"</span></div>`).join("")}</div>`:"")
+    + (past.length?`<div class="warn soft"><b>เครื่องนี้เคยซ่อมมาแล้ว ${past.length} ครั้ง</b>${past.map(t=>`<div>${fmt(t.repair.at)} · ${ST[t.status][0]}<br><span class="muted">${esc(t.repair.found)} → ${esc(t.status==="fail"?t.repair.reason:t.repair.method)}</span></div>`).join("")}</div>`:"")
+    + `<label class="check"><input type="checkbox" id="dupConfirm" ${dupOk?"checked":""}> ยืนยันส่งซ้ำ (เครื่องนี้เสียจริงอีกครั้ง)</label>`;
+  $("dupConfirm").onchange=e=>dupOk=e.target.checked; dupOk = dupOk && true;
+}
+function resetForm(){ $("reportForm").reset(); chosen=null; files={f1:null,f2:null,f3:[]}; ["s1","s2"].forEach(id=>setShot(id,null));
+  $("s3").classList.remove("has"); $("s3").querySelector("b").textContent="＋ รูปเพิ่มเติม"; $("s2").hidden=false;
+  $("picked").hidden=true; pq.hidden=false; $("dym").hidden=true; $("dupWarn").hidden=true; $("formErr").hidden=true; $("ugWrap").classList.remove("on");
+  $("reporter").value=store.get("reporter")||""; $("noSN").dispatchEvent(new Event("change")); $("submitBtn").textContent="ส่งแจ้งซ่อม"; dupOk=false; }
+function fillForm(t){ resetForm(); $("reporter").value=t.reporter; pick(PRODUCTS.find(p=>p.code===t.code)||{name:t.name,code:""});
+  $("noSN").checked=t.manual; $("noSN").dispatchEvent(new Event("change")); $("sn").value=t.sn; $("customer").value=t.customer; $("symptom").value=t.symptom;
+  $("urgent").checked=t.urgent; $("ugWrap").classList.toggle("on",t.urgent); ["s1","s2"].forEach(id=>$(id).classList.add("has"));
+  $("submitBtn").textContent="บันทึกการแก้ไข"; dupOk=true; checkDup(); }
+
+$("reportForm").addEventListener("submit",e=>{ e.preventDefault();
+  const no=$("noSN").checked, typed=pq.value.trim(), errs=[];
+  if(!$("reporter").value) errs.push("เลือกชื่อผู้แจ้ง");
+  if(!chosen&&!typed) errs.push("ใส่ชื่ออุปกรณ์");
+  if(!editing&&!files.f1) errs.push("ถ่ายรูปอุปกรณ์ทั้งตัว ①");
+  if(!editing&&!no&&!files.f2) errs.push("ถ่ายรูปฉลาก S/N ② (หรือติ๊ก \"ไม่มี S/N\")");
+  if(!no&&!$("sn").value.trim()) errs.push("กรอก S/N");
+  if(!$("symptom").value.trim()) errs.push("กรอกอาการเสีย");
+  if(!$("dupWarn").hidden&&!dupOk) errs.push("ติ๊ก \"ยืนยันส่งซ้ำ\" หรือแก้ S/N");
+  $("formErr").hidden=!errs.length; $("formErr").innerHTML="ยังส่งไม่ได้: "+errs.join(" · ");
+  if(errs.length){ $("formErr").scrollIntoView({block:"center"}); return; }
+  const save=()=>{ const p=chosen||{name:typed,code:""};
+    const data={name:p.name,code:p.code,sn:$("sn").value.trim(),manual:no,customer:$("customer").value.trim(),symptom:$("symptom").value.trim(),urgent:$("urgent").checked,reporter:$("reporter").value};
+    store.set("reporter",data.reporter);
+    if(editing){ Object.assign(editing,data); toast("บันทึกการแก้ไขแล้ว"); editing=null; }
+    else { tickets.push({id:seq++,...data,status:"wait",at:new Date(),photos:1+(files.f2?1:0)+files.f3.length});
+      toast(data.urgent?"ส่งแล้ว · 🔴 อีเมลด่วนถึงช่าง (จำลอง)":"ส่งแล้ว · อีเมลแจ้งช่าง (จำลอง)"); }
+    resetForm(); go("queue"); };
+  if(!chosen) confirmBox("ไม่พบชื่อนี้ในรายการสินค้า",`ส่งด้วยชื่อ <b>"${esc(typed)}"</b> ใช่ไหม?<br><span class="muted">เหมาะกับรุ่นเก่าที่เลิกขายแล้ว</span>`,"ใช่ ส่งเลย",false,save);
+  else save();
+});
+
+render();
+</script>

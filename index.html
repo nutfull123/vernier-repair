@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vernier แจ้งซ่อม</title>
+<meta name="theme-color" content="#0b6b57">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="แจ้งซ่อม">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+<script src="config.js"></script>
+<script defer src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script defer src="app.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <!-- LOGIN -->
+  <section id="v-login" class="login" hidden>
+    <div class="mark" aria-hidden="true">V</div>
+    <h1 class="login-title">ระบบแจ้งซ่อม<br>อุปกรณ์ Vernier</h1>
+    <p class="muted">เซนเซอร์ · LabQuest · อุปกรณ์เสริม</p>
+    <form id="loginForm" class="stack" novalidate>
+      <label class="f" for="lu">ชื่อผู้ใช้</label>
+      <input class="in" id="lu" autocomplete="username" autocapitalize="off" required>
+      <label class="f" for="lp">รหัสผ่าน</label>
+      <input class="in" id="lp" type="password" autocomplete="current-password" required>
+      <p class="err" id="loginErr" role="alert" hidden></p>
+      <button class="btn" type="submit" id="loginBtn">เข้าสู่ระบบ</button>
+    </form>
+  </section>
+
+  <div id="shell" hidden>
+    <header class="top">
+      <button class="icon-btn" id="backBtn" type="button" aria-label="กลับหน้าแรก" hidden><svg><use href="#i-back"/></svg></button>
+      <h1 id="title">หน้าแรก</h1>
+      <button class="icon-btn" id="refreshBtn" type="button" aria-label="โหลดข้อมูลล่าสุด"><svg><use href="#i-refresh"/></svg></button>
+    </header>
+
+    <!-- HOME -->
+    <main id="v-home" class="view">
+      <div>
+        <p class="muted small" id="today"></p>
+        <p class="hello">วันนี้มีอะไรเสียบ้าง?</p>
+      </div>
+      <a class="alert" id="urgentAlert" href="#queue" hidden><svg aria-hidden="true"><use href="#i-alert"/></svg><span id="urgentText"></span></a>
+      <nav class="tiles" aria-label="เมนูหลัก">
+        <a class="tile primary" href="#report"><span class="ic"><svg aria-hidden="true"><use href="#i-camera"/></svg></span><span><b>แจ้งของพัง</b><span class="sub">ถ่ายรูป สแกน S/N แล้วส่ง</span></span><span></span></a>
+        <a class="tile" href="#queue"><span class="ic"><svg aria-hidden="true"><use href="#i-wrench"/></svg></span><span><b>อุปกรณ์รอซ่อม</b><span class="sub">รอซ่อมและกำลังซ่อม</span></span><span class="count" id="cQueue">–</span></a>
+        <a class="tile" href="#history"><span class="ic"><svg aria-hidden="true"><use href="#i-list"/></svg></span><span><b>ประวัติการซ่อม</b><span class="sub">ซ่อมเสร็จและซ่อมไม่ได้</span></span><span class="count" id="cHist">–</span></a>
+      </nav>
+      <button class="btn ghost logout" id="logout" type="button">ออกจากระบบ</button>
+    </main>
+
+    <!-- REPORT -->
+    <main id="v-report" class="view" hidden>
+      <form id="reportForm" class="stack-lg" novalidate>
+        <div class="stack">
+          <label class="f" for="reporter">ชื่อผู้แจ้ง <span class="req" aria-hidden="true">*</span></label>
+          <select class="in" id="reporter" required></select>
+          <p class="hint">มือถือเครื่องนี้จะจำชื่อไว้ให้ครั้งหน้า</p>
+        </div>
+
+        <div class="stack">
+          <label class="f" for="pq">ชื่ออุปกรณ์ <span class="req" aria-hidden="true">*</span></label>
+          <div class="combo">
+            <input class="in" id="pq" placeholder="พิมพ์ชื่อหรือรหัส เช่น force, GDX-TMP, labquest" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sugg" aria-autocomplete="list">
+            <div class="sugg" id="sugg" role="listbox" hidden></div>
+          </div>
+          <div id="dym" class="dym" hidden></div>
+          <div id="picked" class="picked" hidden></div>
+        </div>
+
+        <fieldset class="stack">
+          <legend class="f">รูปถ่าย</legend>
+          <p class="tip">ถ่าย 2 รูปดีที่สุด: รูปอุปกรณ์ทั้งตัว 1 รูป และรูปฉลาก S/N ที่เห็นบาร์โค้ดชัดๆ 1 รูป</p>
+          <div class="shots">
+            <div class="shot req-shot" id="s1"><b>① อุปกรณ์ทั้งตัว</b>
+              <div class="pick"><label class="pb"><svg aria-hidden="true"><use href="#i-camera"/></svg>ถ่ายรูป<input type="file" accept="image/*" capture="environment" data-slot="f1"></label><label class="pb"><svg aria-hidden="true"><use href="#i-image"/></svg>แนบรูป<input type="file" accept="image/*" data-slot="f1"></label></div></div>
+            <div class="shot req-shot" id="s2"><b>② ฉลาก S/N</b>
+              <div class="pick"><label class="pb"><svg aria-hidden="true"><use href="#i-camera"/></svg>ถ่ายรูป<input type="file" accept="image/*" capture="environment" data-slot="f2"></label><label class="pb"><svg aria-hidden="true"><use href="#i-image"/></svg>แนบรูป<input type="file" accept="image/*" data-slot="f2"></label></div></div>
+            <div class="shot extra" id="s3"><b id="s3label">รูปเพิ่มเติม</b><span class="hint">ไม่บังคับ สูงสุด 3 รูป</span>
+              <div class="pick"><label class="pb"><svg aria-hidden="true"><use href="#i-camera"/></svg>ถ่ายรูป<input type="file" accept="image/*" capture="environment" data-slot="f3"></label><label class="pb"><svg aria-hidden="true"><use href="#i-image"/></svg>แนบรูป<input type="file" accept="image/*" multiple data-slot="f3"></label></div></div>
+          </div>
+          <div id="oldPhotos" class="thumbs" hidden></div>
+        </fieldset>
+
+        <label class="check"><input type="checkbox" id="noSN"> เครื่องนี้ไม่มี S/N</label>
+        <div class="stack">
+          <label class="f" for="sn"><span id="snLabel">S/N</span> <span class="req" id="snReq" aria-hidden="true">*</span></label>
+          <input class="in mono" id="sn" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="snHint">
+          <p class="hint" id="snHint" aria-live="polite"></p>
+        </div>
+        <div id="dupWarn" class="stack" hidden></div>
+
+        <div class="stack">
+          <label class="f" for="customer">ชื่อลูกค้า</label>
+          <input class="in" id="customer" placeholder="เช่น โรงเรียนสาธิตฯ" aria-describedby="custHint">
+          <p class="hint" id="custHint">ไม่บังคับ · เว้นว่างถ้าเป็นของบริษัท</p>
+        </div>
+        <div class="stack">
+          <label class="f" for="symptom">อาการเสีย <span class="req" aria-hidden="true">*</span></label>
+          <textarea class="in" id="symptom" placeholder="เช่น เปิดไม่ติด, ค่าที่วัดได้กระโดด, สายหลุด" required></textarea>
+        </div>
+
+        <label class="urgent-toggle" id="ugWrap"><input type="checkbox" id="urgent"><span><b>ด่วน</b><br><span class="small">ขึ้นเป็นอันดับแรกในหน้ารอซ่อม</span></span></label>
+
+        <div class="err-box" id="formErr" role="alert" tabindex="-1" hidden></div>
+        <div class="row">
+          <button class="btn ghost" type="button" id="cancelEdit" hidden>ยกเลิกการแก้ไข</button>
+          <button class="btn" type="submit" id="submitBtn">ส่งแจ้งซ่อม</button>
+        </div>
+      </form>
+    </main>
+
+    <!-- QUEUE -->
+    <main id="v-queue" class="view" hidden>
+      <p class="muted small">งานด่วนอยู่บนสุด ถัดไปเรียงจากงานที่แจ้งไว้นานที่สุด · แตะการ์ดเพื่อดูรายละเอียด</p>
+      <div id="queueList" class="stack"></div>
+    </main>
+
+    <!-- HISTORY -->
+    <main id="v-history" class="view" hidden>
+      <div class="filters">
+        <input class="in full" id="hq" type="search" placeholder="ค้นหาชื่ออุปกรณ์, S/N, ลูกค้า" aria-label="ค้นหาประวัติ">
+        <label class="f small-label">ซ่อมเสร็จตั้งแต่<input class="in" type="date" id="hFrom"></label>
+        <label class="f small-label">ถึง<input class="in" type="date" id="hTo"></label>
+        <div class="seg full" role="group" aria-label="สถานะ">
+          <button type="button" data-st="all" aria-pressed="true">ทั้งหมด</button>
+          <button type="button" data-st="done" aria-pressed="false">ซ่อมเสร็จ</button>
+          <button type="button" data-st="fail" aria-pressed="false">ซ่อมไม่ได้</button>
+        </div>
+      </div>
+      <p class="muted small" id="histCount" aria-live="polite"></p>
+      <div id="histList" class="stack"></div>
+    </main>
+
+    <nav class="tabs" aria-label="เมนู"><div class="in-tabs">
+      <a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>หน้าแรก</a>
+      <a href="#report"><svg aria-hidden="true"><use href="#i-camera"/></svg>แจ้งพัง</a>
+      <a href="#queue"><svg aria-hidden="true"><use href="#i-wrench"/></svg>รอซ่อม<i class="badge" id="navBadge" hidden></i></a>
+      <a href="#history"><svg aria-hidden="true"><use href="#i-list"/></svg>ประวัติ</a>
+    </div></nav>
+  </div>
+</div>
+<div id="modalRoot"></div>
+<div id="toastRoot" aria-live="polite"></div>
+</body>
+</html>
